@@ -1,0 +1,43 @@
+{
+  "name": "ChatMessage",
+  "type": "object",
+  "properties": {
+    "child_id": {
+      "type": "string",
+      "description": "ID of the child this message relates to"
+    },
+    "message": {
+      "type": "string",
+      "description": "The message content"
+    },
+    "sender": {
+      "type": "string",
+      "enum": [
+        "parent",
+        "ai"
+      ],
+      "description": "Who sent the message"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "regular",
+        "milestone_update",
+        "weekly_check",
+        "celebration"
+      ],
+      "default": "regular",
+      "description": "Type of message for proactive messaging"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was sent"
+    }
+  },
+  "required": [
+    "child_id",
+    "message",
+    "sender"
+  ]
+}

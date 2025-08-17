@@ -1,0 +1,53 @@
+{
+  "name": "Milestone",
+  "type": "object",
+  "properties": {
+    "child_id": {
+      "type": "string",
+      "description": "ID of the child this milestone relates to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Milestone title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the milestone"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "physical",
+        "cognitive",
+        "social",
+        "language",
+        "emotional"
+      ],
+      "description": "Type of milestone"
+    },
+    "typical_age_months": {
+      "type": "number",
+      "description": "Typical age in months when this milestone occurs"
+    },
+    "achieved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the child has achieved this milestone"
+    },
+    "achieved_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when milestone was achieved"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Parent notes about this milestone"
+    }
+  },
+  "required": [
+    "child_id",
+    "title",
+    "category",
+    "typical_age_months"
+  ]
+}

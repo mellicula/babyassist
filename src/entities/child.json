@@ -1,0 +1,37 @@
+{
+  "name": "Child",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Child's name"
+    },
+    "birthday": {
+      "type": "string",
+      "format": "date",
+      "description": "Child's birth date"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "boy",
+        "girl",
+        "prefer_not_to_say"
+      ],
+      "description": "Child's gender"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "Child's photo URL"
+    },
+    "last_milestone_check": {
+      "type": "string",
+      "format": "date",
+      "description": "Last time we sent milestone updates"
+    }
+  },
+  "required": [
+    "name",
+    "birthday"
+  ]
+}

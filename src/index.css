@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-soft: #6366f1;
+  --primary-gentle: #8b5cf6;
+  --accent-warm: #f59e0b;
+  --accent-soft: #10b981;
+  --neutral-warm: #f3f4f6;
+  --text-primary: #1f2937;
+  --text-soft: #6b7280;
+  --surface-white: #ffffff;
+  --surface-soft: #f9fafb;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.glass-effect {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+} 
