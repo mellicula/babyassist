@@ -3,14 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Camera, Baby } from "lucide-react";
+import { DatePicker } from "../ui/datepicker";
+import { Baby } from "lucide-react";
 
 export default function AddChildDialog({ open, onOpenChange, onAddChild }) {
   const [formData, setFormData] = useState({
     name: "",
     birthday: "",
-    gender: "",
     photo_url: ""
   });
 
@@ -28,7 +27,7 @@ export default function AddChildDialog({ open, onOpenChange, onAddChild }) {
     setIsSubmitting(true);
     try {
       await onAddChild(formData);
-      setFormData({ name: "", birthday: "", gender: "", photo_url: "" });
+      setFormData({ name: "", birthday: "", photo_url: "" });
     } catch (error) {
       console.error('Error adding child:', error);
     } finally {
@@ -74,33 +73,20 @@ export default function AddChildDialog({ open, onOpenChange, onAddChild }) {
             <Label htmlFor="birthday" className="text-sm font-medium text-gray-700">
               Birthday *
             </Label>
-            <Input
-              id="birthday"
-              type="date"
+            <DatePicker
               value={formData.birthday}
-              onChange={(e) => handleInputChange('birthday', e.target.value)}
-              className="rounded-full border-2 border-gray-200 focus:border-indigo-400 px-4 py-3 text-gray-800 cursor-pointer"
+              onChange={(value) => handleInputChange('birthday', value)}
+              placeholder="Select your child's birthday"
               max={new Date().toISOString().split('T')[0]}
               min="2020-01-01"
-              required
+              className="w-full"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Click to open calendar picker
+            </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="gender" className="text-sm font-medium text-gray-700">
-              Gender (Optional)
-            </Label>
-            <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
-              <SelectTrigger className="rounded-full border-2 border-gray-200 focus:border-indigo-400 px-4 py-3">
-                <SelectValue placeholder="Select gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="boy">Boy</SelectItem>
-                <SelectItem value="girl">Girl</SelectItem>
-                <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
 
           <div className="flex gap-3 pt-4">
             <Button
