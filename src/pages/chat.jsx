@@ -58,42 +58,27 @@ export default function Chat() {
   }
 
   return (
-    <div className="max-w-sm mx-auto flex flex-col h-screen">
-      {/* Header */}
-      <div className="glass-effect p-4 border-b border-white/20">
-        <div className="flex items-center gap-3">
-          <Link to="/">
-            <Button variant="outline" size="sm" className="rounded-full">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div className="flex-1">
-            <h2 className="font-bold text-gray-800">{child.name}</h2>
-            <p className="text-xs text-gray-500">AI Parenting Assistant</p>
-          </div>
+    <div className="max-w-sm mx-auto p-4">
+      {/* Header with back button */}
+      <div className="flex items-center gap-3 mb-4">
+        <Link to="/">
+          <Button variant="outline" size="sm" className="rounded-full">
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </Link>
+        <h1 className="text-lg font-bold text-gray-800">Chat</h1>
+      </div>
+      
+      <div className="glass-effect rounded-3xl p-6 mb-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Chat with {child.name}</h2>
+        <p className="text-gray-600">Ask me anything about {child.name}'s development!</p>
+      </div>
+      
+      <div className="glass-effect rounded-3xl p-6">
+        <div className="text-center text-gray-500">
+          <p>Chat functionality coming soon!</p>
+          <p className="text-sm mt-2">This will include AI-powered parenting advice and milestone tracking.</p>
         </div>
-      </div>
-
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <MessageBubble 
-            key={message.id} 
-            message={message} 
-            isParent={message.sender === 'parent'}
-          />
-        ))}
-        
-        {isTyping && <TypingIndicator />}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Chat Input */}
-      <div className="p-4 border-t border-white/20">
-        <ChatInput 
-          onSendMessage={sendMessage}
-          disabled={isTyping}
-        />
       </div>
     </div>
   );

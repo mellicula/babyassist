@@ -1,21 +1,16 @@
-// Enhanced AI integration with RAG capabilities
-import { RAGService } from '../services/ragService.js';
-
-export async function InvokeLLM({ prompt, childInfo = null }) {
-  try {
-    // Use RAG to get relevant documents and generate response
-    const documents = await RAGService.retrieveRelevantDocuments(prompt, 3);
-    const result = await RAGService.generateContextAwareResponse(prompt, childInfo, documents);
-    
-    return {
-      response: result.response,
-      sources: result.sources
-    };
-  } catch (error) {
-    console.error('Error in InvokeLLM:', error);
-    return {
-      response: "I'm having trouble accessing my knowledge base right now. Please try again in a moment.",
-      sources: []
-    };
+// Mock AI integration for development
+export async function InvokeLLM({ prompt }) {
+  // Simulate AI response delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Return a mock response based on the prompt
+  if (prompt.includes('welcome')) {
+    return "Welcome to BabyAssistant! I'm here to help you track your child's development and provide parenting guidance. Let me know if you have any questions!";
   }
+  
+  if (prompt.includes('milestone')) {
+    return "Great question about milestones! Every child develops at their own pace. I'd be happy to help you understand what to expect at different ages.";
+  }
+  
+  return "Thank you for your question! I'm here to support you on your parenting journey. Feel free to ask me anything about child development, milestones, or parenting tips.";
 } 
