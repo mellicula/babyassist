@@ -1,152 +1,299 @@
-// RAG (Retrieval-Augmented Generation) Service
-// This simulates document storage and retrieval for parenting knowledge
+/**
+ * RAG Service for Baby Assistant
+ * 
+ * This service provides Retrieval-Augmented Generation capabilities by:
+ * 1. Storing parenting documents in Supabase
+ * 2. Retrieving relevant documents based on user queries
+ * 3. Enhancing AI responses with context from authoritative sources
+ * 
+ * @service
+ * @description Supabase-powered RAG system for parenting advice
+ */
 
-// Mock document database - in a real app, this would be a vector database like ChromaDB
-const DOCUMENTS = [
+import { createClient } from '@supabase/supabase-js';
+
+/**
+ * Supabase client configuration
+ * 
+ * IMPORTANT: Store these in your .env file:
+ * VITE_SUPABASE_URL=your-supabase-url
+ * VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+ */
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase credentials not found. RAG functionality will be limited.');
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/**
+ * Document structure for parenting resources
+ */
+const DOCUMENT_SOURCES = [
   {
-    id: 'doc-1',
-    title: 'Developmental Milestones: 0-12 Months',
-    content: 'Babies develop at their own pace, but here are general milestones to expect: 0-3 months: Lifts head when on tummy, follows moving objects with eyes, smiles responsively. 4-6 months: Rolls over, sits with support, reaches for objects. 7-9 months: Sits without support, crawls, babbles. 10-12 months: Pulls to standing, says first words, walks with support.',
-    url: 'https://www.cdc.gov/ncbddd/actearly/milestones/index.html',
-    category: 'development'
+    title: "Baby Development 0-3 Months",
+    url: "https://www.qld.gov.au/health/condition/child-health/babies-and-toddlers/how-your-baby-develops-from-0-to-3-months",
+    category: "development",
+    age_range: "0-3 months"
   },
   {
-    id: 'doc-2',
-    title: 'Safe Sleep Guidelines',
-    content: 'Always place babies on their back to sleep. Use a firm, flat sleep surface. Keep soft objects and loose bedding out of the sleep area. Share your room, not your bed. Avoid overheating. Never smoke around your baby.',
-    url: 'https://www.cdc.gov/sids/about/safe-sleep-for-babies.htm',
-    category: 'sleep'
+    title: "Baby Development 3-6 Months", 
+    url: "https://www.qld.gov.au/health/condition/child-health/babies-and-toddlers/how-your-baby-develops-3-6-months",
+    category: "development",
+    age_range: "3-6 months"
   },
   {
-    id: 'doc-3',
-    title: 'Feeding Guidelines: 0-6 Months',
-    content: 'Breast milk or formula provides all the nutrition your baby needs for the first 6 months. Feed on demand, typically 8-12 times per day. Watch for hunger cues like rooting, sucking on hands, or crying. Consult your pediatrician about feeding concerns.',
-    url: 'https://www.cdc.gov/nutrition/infantandtoddlernutrition/babies.html',
-    category: 'feeding'
+    title: "Baby Development 6-9 Months",
+    url: "https://www.qld.gov.au/health/condition/child-health/babies-and-toddlers/how-your-baby-develops-6-9-months", 
+    category: "development",
+    age_range: "6-9 months"
   },
   {
-    id: 'doc-4',
-    title: 'Baby-Proofing Your Home',
-    content: 'Install safety gates at stairs and doorways. Cover electrical outlets. Secure furniture to walls. Keep small objects out of reach. Use cabinet locks. Install window guards. Keep cleaning products locked away. Set water heater to 120°F or lower.',
-    url: 'https://www.safekids.org/baby-proofing',
-    category: 'safety'
+    title: "Baby Development 9-12 Months",
+    url: "https://www.qld.gov.au/health/condition/child-health/babies-and-toddlers/how-your-baby-develops-9-12-months",
+    category: "development", 
+    age_range: "9-12 months"
   },
   {
-    id: 'doc-5',
-    title: 'Language Development: Birth to 3 Years',
-    content: 'Language development begins at birth. 0-3 months: Coos and makes pleasure sounds. 4-6 months: Babbles with different sounds. 7-12 months: Says first words, understands simple commands. 12-18 months: Uses 5-20 words, follows simple directions. 18-24 months: Uses 2-word phrases, asks simple questions.',
-    url: 'https://www.asha.org/public/speech/development/speech-and-language/',
-    category: 'language'
+    title: "Teething Guide",
+    url: "https://www.qld.gov.au/health/condition/child-health/babies-and-toddlers/teething",
+    category: "health",
+    age_range: "3+ months"
   },
   {
-    id: 'doc-6',
-    title: 'When to Call the Doctor',
-    content: 'Call your pediatrician if your baby: Has a fever over 100.4°F (under 3 months) or 102.2°F (3-6 months), refuses to eat, has persistent crying, shows signs of dehydration, has difficulty breathing, has a rash with fever, or if you have any concerns about your baby\'s health or development.',
-    url: 'https://www.healthychildren.org/English/health-issues/conditions/fever/Pages/When-to-Call-the-Pediatrician.aspx',
-    category: 'health'
+    title: "Breastfeeding Support",
+    url: "https://www.health.nsw.gov.au/kidsfamilies/MCFhealth/child/Pages/breastfeeding.aspx",
+    category: "feeding",
+    age_range: "0+ months"
+  },
+  {
+    title: "Immunization Schedule",
+    url: "https://www.health.gov.au/topics/immunisation/when-to-get-vaccinated/immunisation-for-infants-and-children",
+    category: "health",
+    age_range: "0+ months"
   }
 ];
 
-// Simple keyword matching for document retrieval
-function calculateRelevance(query, document) {
-  const queryWords = query.toLowerCase().split(' ');
-  const docText = (document.title + ' ' + document.content).toLowerCase();
-  
-  let score = 0;
-  queryWords.forEach(word => {
-    if (docText.includes(word)) {
-      score += 1;
+/**
+ * Retrieves relevant documents based on user query and child context
+ * 
+ * @async
+ * @function retrieveRelevantDocuments
+ * @param {string} query - User's question or query
+ * @param {Object} childInfo - Information about the child (age, etc.)
+ * @param {number} [limit=3] - Maximum number of documents to retrieve
+ * @returns {Promise<Array>} Array of relevant documents with metadata
+ * 
+ * @example
+ * const docs = await retrieveRelevantDocuments(
+ *   "How can I help my baby sleep better?",
+ *   { age: "6 months" }
+ * );
+ */
+export async function retrieveRelevantDocuments(query, childInfo = null, limit = 3) {
+  try {
+    // For now, we'll use a simple keyword-based approach
+    // In production, you'd implement semantic search with embeddings
+    
+    const relevantDocs = DOCUMENT_SOURCES.filter(doc => {
+      const queryLower = query.toLowerCase();
+      const titleLower = doc.title.toLowerCase();
+      
+      // Check if query keywords match document title or category
+      const keywords = queryLower.split(' ');
+      return keywords.some(keyword => 
+        titleLower.includes(keyword) || 
+        doc.category.includes(keyword) ||
+        doc.age_range.includes(keyword)
+      );
+    });
+
+    // If no exact matches, return general development docs
+    if (relevantDocs.length === 0 && childInfo) {
+      const childAge = calculateAgeInMonths(childInfo.birthday);
+      return DOCUMENT_SOURCES.filter(doc => 
+        doc.category === 'development' && 
+        isAgeRelevant(doc.age_range, childAge)
+      ).slice(0, limit);
     }
-  });
-  
-  return score;
+
+    return relevantDocs.slice(0, limit);
+
+  } catch (error) {
+    console.error('Error retrieving documents:', error);
+    return [];
+  }
 }
 
-export class RAGService {
-  static async retrieveRelevantDocuments(query, limit = 3) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Calculate relevance scores for all documents
-    const scoredDocs = DOCUMENTS.map(doc => ({
-      ...doc,
-      relevance: calculateRelevance(query, doc)
-    }));
-    
-    // Sort by relevance and return top results
-    return scoredDocs
-      .filter(doc => doc.relevance > 0)
-      .sort((a, b) => b.relevance - a.relevance)
-      .slice(0, limit);
-  }
-  
-  static async generateContextAwareResponse(query, childInfo, documents) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-    
-    if (documents.length === 0) {
-      return {
-        response: "I don't have specific information about that topic yet, but I'd be happy to help with general parenting questions about milestones, sleep, feeding, safety, or health concerns.",
-        sources: []
-      };
-    }
-    
+/**
+ * Generates a context-aware response using retrieved documents
+ * 
+ * @async
+ * @function generateContextAwareResponse
+ * @param {string} query - User's question
+ * @param {Object} childInfo - Information about the child
+ * @param {Array} documents - Retrieved relevant documents
+ * @returns {Promise<Object>} AI response with context and sources
+ * 
+ * @example
+ * const response = await generateContextAwareResponse(
+ *   "Sleep training tips",
+ *   { name: "Emma", age: "6 months" },
+ *   relevantDocs
+ * );
+ */
+export async function generateContextAwareResponse(query, childInfo, documents) {
+  try {
     // Create context from retrieved documents
     const context = documents.map(doc => 
-      `${doc.title}\n${doc.content}`
+      `Source: ${doc.title}\nURL: ${doc.url}\nAge Range: ${doc.age_range}\nCategory: ${doc.category}`
     ).join('\n\n');
-    
-    // Generate response based on context
-    const response = this.generateResponseFromContext(query, childInfo, context);
-    
-    // Format sources
-    const sources = documents.map(doc => ({
-      title: doc.title,
-      url: doc.url,
-      excerpt: doc.content.substring(0, 150) + '...'
-    }));
-    
-    return { response, sources };
+
+    // Create enhanced prompt with context
+    const enhancedPrompt = `
+Based on the following authoritative parenting resources, please answer this question: "${query}"
+
+Context about the child: ${childInfo ? `${childInfo.name} is ${calculateAgeInMonths(childInfo.birthday)} months old` : 'No specific child information provided'}
+
+Relevant resources:
+${context}
+
+IMPORTANT: Provide a CONCISE, focused answer (2-3 sentences maximum). Only elaborate if specifically asked. Include 2-3 relevant follow-up questions that the parent might want to ask next. Format your response as:
+
+Answer: [brief, focused response]
+
+Follow-up questions:
+• [question 1]
+• [question 2] 
+• [question 3]
+
+Keep it short and actionable. Avoid overwhelming with too much information.
+`;
+
+    // This would be sent to your AI service
+    return {
+      prompt: enhancedPrompt,
+      sources: documents,
+      context: context
+    };
+
+  } catch (error) {
+    console.error('Error generating context-aware response:', error);
+    return {
+      prompt: query,
+      sources: [],
+      context: ''
+    };
+  }
+}
+
+/**
+ * Stores a new document in Supabase (for admin use)
+ * 
+ * @async
+ * @function storeDocument
+ * @param {Object} document - Document to store
+ * @param {string} document.title - Document title
+ * @param {string} document.url - Source URL
+ * @param {string} document.content - Document content
+ * @param {string} document.category - Document category
+ * @param {string} document.age_range - Relevant age range
+ * @returns {Promise<Object>} Stored document with ID
+ */
+export async function storeDocument(document) {
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .insert([{
+        title: document.title,
+        url: document.url,
+        content: document.content,
+        category: document.category,
+        age_range: document.age_range,
+        created_at: new Date().toISOString()
+      }])
+      .select();
+
+    if (error) throw error;
+    return data[0];
+
+  } catch (error) {
+    console.error('Error storing document:', error);
+    throw error;
+  }
+}
+
+/**
+ * Retrieves documents by category and age range
+ * 
+ * @async
+ * @function getDocumentsByCategory
+ * @param {string} category - Document category to filter by
+ * @param {string} ageRange - Age range to filter by
+ * @returns {Promise<Array>} Array of matching documents
+ */
+export async function getDocumentsByCategory(category, ageRange = null) {
+  try {
+    let query = supabase
+      .from('documents')
+      .select('*')
+      .eq('category', category);
+
+    if (ageRange) {
+      query = query.eq('age_range', ageRange);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data || [];
+
+  } catch (error) {
+    console.error('Error retrieving documents by category:', error);
+    return [];
+  }
+}
+
+/**
+ * Helper function to calculate age in months
+ * 
+ * @function calculateAgeInMonths
+ * @param {string} birthday - Child's birthday (ISO string)
+ * @returns {number} Age in months
+ */
+function calculateAgeInMonths(birthday) {
+  const birthDate = new Date(birthday);
+  const now = new Date();
+  const months = (now.getFullYear() - birthDate.getFullYear()) * 12 + 
+                (now.getMonth() - birthDate.getMonth());
+  return Math.max(0, months);
+}
+
+/**
+ * Helper function to check if age range is relevant
+ * 
+ * @function isAgeRelevant
+ * @param {string} ageRange - Document age range (e.g., "6-9 months")
+ * @param {number} childAge - Child's age in months
+ * @returns {boolean} Whether the age range is relevant
+ */
+function isAgeRelevant(ageRange, childAge) {
+  if (!ageRange || ageRange === '0+ months') return true;
+  
+  const range = ageRange.match(/(\d+)-(\d+)\s*months?/);
+  if (range) {
+    const min = parseInt(range[1]);
+    const max = parseInt(range[2]);
+    return childAge >= min && childAge <= max;
   }
   
-  static generateResponseFromContext(query, childInfo, context) {
-    const lowerQuery = query.toLowerCase();
-    const childName = childInfo?.name || 'your child';
-    
-    // Simple rule-based response generation based on context
-    if (lowerQuery.includes('milestone') || lowerQuery.includes('development')) {
-      return `Based on the developmental guidelines, ${childName} should be reaching age-appropriate milestones. Remember that every child develops at their own pace. If you have concerns about ${childName}'s development, consult your pediatrician.`;
-    }
-    
-    if (lowerQuery.includes('sleep') || lowerQuery.includes('bedtime')) {
-      return `For safe sleep, always place ${childName} on their back to sleep on a firm, flat surface. Keep the sleep area free of soft objects and loose bedding. Room sharing (but not bed sharing) is recommended for the first 6-12 months.`;
-    }
-    
-    if (lowerQuery.includes('feed') || lowerQuery.includes('food') || lowerQuery.includes('eating')) {
-      return `For feeding, breast milk or formula provides complete nutrition for the first 6 months. Feed ${childName} on demand and watch for hunger cues. Always consult your pediatrician about feeding concerns.`;
-    }
-    
-    if (lowerQuery.includes('safe') || lowerQuery.includes('safety')) {
-      return `To keep ${childName} safe, baby-proof your home by installing safety gates, covering electrical outlets, securing furniture, and keeping small objects out of reach. Never leave ${childName} unattended.`;
-    }
-    
-    if (lowerQuery.includes('doctor') || lowerQuery.includes('health') || lowerQuery.includes('sick')) {
-      return `Call your pediatrician if ${childName} has a fever over 100.4°F (under 3 months), refuses to eat, shows signs of dehydration, has difficulty breathing, or if you have any concerns about their health.`;
-    }
-    
-    // Default response
-    return `I found some relevant information that might help. Based on the guidelines, ${childName} should follow age-appropriate patterns for development, sleep, feeding, and safety. Always consult your pediatrician for specific medical advice.`;
+  const single = ageRange.match(/(\d+)\+\s*months?/);
+  if (single) {
+    const min = parseInt(single[1]);
+    return childAge >= min;
   }
   
-  // Method to add new documents (for future expansion)
-  static async addDocument(document) {
-    // In a real implementation, this would add to the vector database
-    console.log('Adding document:', document.title);
-    return { success: true, id: `doc-${Date.now()}` };
-  }
-  
-  // Method to search documents by category
-  static async searchByCategory(category) {
-    return DOCUMENTS.filter(doc => doc.category === category);
-  }
+  return false;
 } 
