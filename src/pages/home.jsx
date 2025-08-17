@@ -11,6 +11,20 @@ import AddChildDialog from "../components/home/addchilddialog";
 import ChildCard from "../components/home/childcard";
 import ProactiveMessaging from "../components/home/proactivemessaging";
 
+/**
+ * Home Page Component
+ * 
+ * The main landing page of the Baby Assistant application. This component
+ * manages the display and interaction with child data, including:
+ * - Displaying existing children
+ * - Adding new children through a modal dialog
+ * - Proactive messaging for child development
+ * - Navigation to other application features
+ * 
+ * @component
+ * @description Main dashboard for managing children and accessing app features
+ */
+
 export default function Home() {
   const [children, setChildren] = useState([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -21,6 +35,20 @@ export default function Home() {
     loadUserAndChildren();
   }, []);
 
+  /**
+   * Loads user data and associated children from the system
+   * 
+   * This function performs two main operations:
+   * 1. Retrieves the current user's information
+   * 2. Fetches all children associated with the user
+   * 
+   * The function handles errors gracefully and updates the loading state
+   * to provide user feedback during data retrieval.
+   * 
+   * @async
+   * @function loadUserAndChildren
+   * @throws {Error} When user or child data cannot be retrieved
+   */
   const loadUserAndChildren = async () => {
     try {
       const userData = await User.me();
@@ -36,6 +64,22 @@ export default function Home() {
     }
   };
 
+  /**
+   * Handles the creation of a new child record
+   * 
+   * This function processes the child data submitted through the AddChildDialog,
+   * creates a new child record in the system, and updates the UI to reflect
+   * the changes. It also manages the dialog state and provides error handling.
+   * 
+   * @async
+   * @function handleAddChild
+   * @param {Object} childData - The child information to create
+   * @param {string} childData.name - The child's name
+   * @param {string} childData.birthday - The child's date of birth
+   * @param {string} [childData.gender] - The child's gender (optional)
+   * @param {string} [childData.photo_url] - URL to the child's photo (optional)
+   * @throws {Error} When child creation fails
+   */
   const handleAddChild = async (childData) => {
     try {
       console.log('Adding child with data:', childData);
@@ -51,6 +95,24 @@ export default function Home() {
     }
   };
 
+  /**
+   * Calculates and formats a child's age based on their birthday
+   * 
+   * This function takes a birthday date and calculates the current age,
+   * returning a human-readable string representation. It handles different
+   * age ranges appropriately:
+   * - Under 1 month: Shows days
+   * - Under 1 year: Shows months
+   * - 1 year and older: Shows years and remaining months
+   * 
+   * @function calculateAge
+   * @param {string|Date} birthday - The child's date of birth
+   * @returns {string} A formatted age string (e.g., "3 months old", "2 years 5 months old")
+   * 
+   * @example
+   * const age = calculateAge('2024-01-15');
+   * // Returns: "3 months old" (if current date is April 2024)
+   */
   const calculateAge = (birthday) => {
     const birthDate = new Date(birthday);
     const now = new Date();

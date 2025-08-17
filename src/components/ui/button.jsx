@@ -1,6 +1,37 @@
 import React from 'react';
 import { cn } from '../../utils.js';
 
+/**
+ * Button Component
+ * 
+ * A highly configurable button component that provides consistent styling
+ * and behavior across the application. Supports multiple variants, sizes,
+ * and can be extended with additional props.
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Button content (text, icons, etc.)
+ * @param {string} [props.className=''] - Additional CSS classes to apply
+ * @param {'default'|'secondary'|'outline'|'ghost'} [props.variant='default'] - Visual style variant
+ * @param {'default'|'sm'|'lg'|'icon'} [props.size='default'] - Size variant
+ * @param {Object} props - Additional HTML button attributes (onClick, disabled, etc.)
+ * 
+ * @example
+ * // Basic button
+ * <Button>Click me</Button>
+ * 
+ * // Button with variant and size
+ * <Button variant="outline" size="lg">Large Outline Button</Button>
+ * 
+ * // Button with custom classes and event handler
+ * <Button 
+ *   className="custom-styles" 
+ *   onClick={handleClick}
+ *   disabled={isLoading}
+ * >
+ *   Submit
+ * </Button>
+ */
 export function Button({ 
   children, 
   className = '', 
